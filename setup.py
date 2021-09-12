@@ -29,7 +29,7 @@ from pathlib import Path
 
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 there = Path(str(sysconfig.get_paths()["purelib"]) + '/cvclient')
-version = 0.3
+version = 0.1
 
 
 def is_virtualenv():
