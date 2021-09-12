@@ -1,0 +1,149 @@
+CVCLIENT Version 0.3
+
+The version 0.3 release of this module is unlicensed and provided only under NDA, please see the LICENSE file for details.
+
+------------------------------------------------------------------------------------------------------------------------
+REQUIREMENTS:
+------------------------------------------------------------------------------------------------------------------------
+shutil - native compile
+sysconfig - native compile
+setuptools - native
+pathlib==1.0.1
+requests==2.26.0
+urllib3==1.26.6
+json - native compile
+------------------------------------------------------------------------------------------------------------------------
+INSTALL:
+------------------------------------------------------------------------------------------------------------------------
+Virtual environment:
+    virtualenv venv
+    source venv/bin/activate
+    proceed to native install steps
+
+Native:
+    python setup.py install <path to cvclient\setup.py>
+alternative:
+    pip install <path to cvclient folder>
+
+------------------------------------------------------------------------------------------------------------------------
+Usage:
+------------------------------------------------------------------------------------------------------------------------
+Note: the cvlient module performs transaction chaining, it is paramount that cvclient be initialized outside
+        of the main loop and inherited by asynchronous or multithreaded business logic.
+------------------------------------------------------------------------------------------------------------------------
+Examples:
+------------------------------------------------------------------------------------------------------------------------
+Init:
+
+    import cvclient
+    client = cvclient.Client('my_api_key', 'https://targetserver:port')
+
+Alerts:
+
+    alerts = client.get_alerts('aaa')  # The triple action solver (aaa) is the origin of the data-feed, more will be
+                                            added in the future.
+    print(alerts)
+
+Charts: (coming soon)
+    # NOTE: If you want to request a focus of BTC or ETH just leave the chart_focus field set to None.
+    chart = client.get_chart(
+                    chart_type='aaa', # Data-feed origin.
+                    chart_length='20',  # Number of bars we are requesting.
+                    chart_time='30MINUTE',  # The timeframe of the above bars.
+                    chart_focus='ADA',  # The currency we want to calculate against (defaults to btc/eth).
+            )
+    print(chart)
+------------------------------------------------------------------------------------------------------------------------
+Example returns:
+------------------------------------------------------------------------------------------------------------------------
+Alerts:
+
+{
+    'tx': 'dde4c840-668a-4de8-9ab1-31da7c530d18',   # TransactionID (cvclient handles this automatically).
+    'alerts': {
+        'one': [0.15, 0.6, 0.14],  # Alert information in format: [15m, 1h, 4h]
+        'ada': [1.2, 4.779999999999999, 12.65],
+        'btc_eth': [1.009999999999991, 9.609999999999985, 15.609999999999985],  # btc_eth is the baseline values that
+                                                                                    all others can be calculated against. *
+        'doge': [0.11, 0.18],   # Note that this alert is newer (less than 4 hours) and only contains a 15m and 1h value. **
+        'FGI': 15  # This is the fear and greed index. It's here only for convenience.
+    },
+    'type': None,  # Error type (code)
+    'msg': None  # Error description.
+}
+
+
+Charts:
+
+{
+    'tx': 'f511091c-1da6-4543-918a-d11e20d50b18',  # TransactionID (cvclient handles this automatically).
+    'stamp': '2021-07-17-16-29',   # Timestamp of the last data refresh.
+    'chart_data': [
+        [167.38, 171.59, 167.38, 171.59, 0.88],   # Chart feed in the format: [open, high, low, close, volume]
+        [171.59, 176.82, 171.59, 176.82, 1.2225000000000001],
+        [176.82, 182.52, 176.82, 182.52, 1.2224000000000002]
+    ],
+    type': None,  # Error type (code)
+    'msg': None  # Error description.
+}
+
+
+Notes:
+
+*The btc_eth value is a baseline that exists under all other alerts; however, it is in an unprocessed state in the alerts
+    call return. This is done to add flexibility to client-side business logic.
+
+Alerts will come and go as they are not persistent, this is normal and expected.
+
+**Due to the way chart data is sampled partial alert behavior is as follows:
+    When an alert becomes active it will present on all three of the samples (15m, 1h, 4h) with the same value (1.5, 1.5, 1.5).
+    As the alert ages we will see the values change (1.5, 6.0, 24). When an alert expires it will vanish from the samples
+    starting with the lowest (1.5, 6.0, 24) >> (6.0, 24) >> (24) This behavior exactly mirriors the price values of a
+    candlestick chart with values moving faster on the 15 minute than the hourly and so on.
+
+------------------------------------------------------------------------------------------------------------------------
+triple action theory
+------------------------------------------------------------------------------------------------------------------------
+
+The triple action (aaa) data solver is an attempt to measure the reactive probability of real world individuals
+    with respect to the cryptocurrency market space. This measurement is designed to sample changes in market trends
+    and other behaviors before they cause a change in price action.
+
+Observations:
+
+The triple action data feed has several observed properties:
+
+1. The longer the timeframe the less accurate.
+    The measurement has shown to not be accurate past the one-day cycle, and thus this is the largest offered.
+    The shortest is 15 minutes.
+
+2. The aaa feed goes through reactive and proactive cycles. Sometimes price action is governed by intent and sometimes
+    intent is governed by price action.
+
+3. During proactive cycles the aaa alert usually clears just before price action catches up.
+
+4. The baseline btc_eth measurement has a larger effect than individual alerts and should be factored as such.
+
+5. Negative actions are greatly more impactful than positive ones (this will be subject to further observation).
+
+6. Greatest (observed) accuracy (so far) tends toward range limits, Breakout behavior has not (yet) been studied.
+
+NOTES:
+
+1. The aaa data-feed processes no price data, this is important to understanding it's behavior.
+
+2. As the aaa data-feed is experimental, many parts of the strategy and behavior are still being realized.
+
+3. The samples measured by this program only have implied values, in short there is no unit of measurement to use as a
+        baseline. As it stands positive values are bullish and increase with the number. The opposite stands for bearish.
+
+4. The (price-like) value of the plotted chart isn't relevant, rather the rate and direction of change over time.
+
+------------------------------------------------------------------------------------------------------------------------
+Conclusion
+------------------------------------------------------------------------------------------------------------------------
+
+If you have made it this far and are asking youself "but what does it do?", that's perfectly normal. The operational
+    documents are a work in progress. Until then, you will simply have to ask me yourself:
+    kev0.0.0.255@gmail.com
+Toodles,
