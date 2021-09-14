@@ -23,13 +23,30 @@ import sys
 import os
 import sysconfig
 import shutil
+from subprocess import Popen, PIPE
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 from pathlib import Path
 
 here = Path(os.path.abspath(os.path.dirname(__file__)))
 there = Path(str(sysconfig.get_paths()["purelib"]) + '/cvclient')
-version = 0.1
+version = 0.2
+
+
+def system_command(params):
+    """
+    Use this to execute a system level command.
+
+    NOTE: Use with caution.
+    :param params: List of commands and args to execute.
+    :type params: list
+    :return: stout.
+    :rtype: PIPE
+    """
+    process = Popen(params, stdout=PIPE)
+    output, _error = process.communicate()
+    output = output.decode("utf8")
+    return output
 
 
 def is_virtualenv():
@@ -60,7 +77,16 @@ def simple_install(installer, obj, copy=False):
         Just that...
         :return:
         """
-        shutil.copytree(here, there)
+        try:
+            shutil.rmtree(there)
+        except WindowsError:
+            pass
+        system_command(['pip', 'install', '-r', 'requirements.txt'])
+        shutil.copytree(
+            here,
+            there,
+            ignore=shutil.ignore_patterns('*.git', '*.idea', '*.gitignore', '*cvclient.egg-info')
+                        )
 
     if copy:
         place_files()
@@ -81,7 +107,7 @@ class Install(install):
     """
     def run(self):
         """
-        TODO: Write an uninstaller...
+        it..
         """
         simple_install(install, self, True)
 
@@ -92,7 +118,7 @@ class Uninstall(install):
     """
     def run(self):
         """
-        TODO: Write an uninstaller...
+        it..
         """
         simple_install(install, self, True)
 
