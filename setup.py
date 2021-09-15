@@ -77,7 +77,10 @@ def simple_install(installer, obj, copy=False):
         Just that...
         :return:
         """
-        shutil.rmtree(there)
+        try:
+            shutil.rmtree(there)
+        except:
+            pass
         system_command(['pip', 'install', '-r', 'requirements.txt'])
         shutil.copytree(
             here,
