@@ -135,8 +135,8 @@ class Client:
             time.sleep(5)  # Prevent hammer retries.
             print('retrying connection', '*info*')
             self.post(url_path, request)
-        try:
-            try:
+        try:  # Handle connection problems (no connection).
+            try:  # Handle problematic response contents.
                 self.response = self.response.json()  # Get response from api.
             except json.decoder.JSONDecodeError:
                 if not self.response.text:
