@@ -136,14 +136,21 @@ class Client:
             print('retrying connection', '*info*')
             self.post(url_path, request)
         try:
-            self.response = self.response.json()  # Get response from api.
-        except json.decoder.JSONDecodeError:
-            if not self.response.text:
-                print('connection failure, invalid API key')
-                raise ConnectionError
-            print('unable to process json response', '*err*')
-            raise AttributeError
-        self.recv_tx()  # Update transaction ID.
+            try:
+                self.response = self.response.json()  # Get response from api.
+            except json.decoder.JSONDecodeError:
+                if not self.response.text:
+                    print('connection failure, invalid API key')
+                    raise ConnectionError
+                print('unable to process json response', '*err*')
+                raise AttributeError
+            self.recv_tx()  # Update transaction ID.
+        except AttributeError:
+            print('connection error')
+            if isinstance(self.response, dict):
+                print(self.response)
+            time.sleep(5)
+            self.post(url_path, request)
         return self
 
     def check_status(self, req_ty: str, cache_key: str) -> bool:
