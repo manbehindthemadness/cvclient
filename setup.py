@@ -79,9 +79,8 @@ def simple_install(installer, obj, copy=False):
         """
         try:
             shutil.rmtree(there)
-        except:
+        except:  # noqa
             pass
-        system_command(['pip', 'install', '-r', 'requirements.txt'])
         shutil.copytree(
             here,
             there,
@@ -93,7 +92,7 @@ def simple_install(installer, obj, copy=False):
     installer.run(obj)
 
 
-def simple_uninstall(installer, obj, delete=False):
+def simple_uninstall(installer, obj, delete=False):  # noqa
     """
     A simple uninstaller.
     """
