@@ -17,6 +17,10 @@ import json
 import time
 import requests
 import urllib3
+try:
+    from utils import log
+except ImportError:
+    from .utils import log
 
 TRANSACTION_CACHE = dict()
 
@@ -68,7 +72,7 @@ class Client:
         This ensures we don't have a problematic request type.
         """
         if req not in self.request_types:
-            print('no handler for request:', req)
+            log('no handler for request:', req)
             raise ValueError
 
     def format_url(self, url: str) -> str:
@@ -87,7 +91,7 @@ class Client:
             tx = self.cache[self.key]
         self.request.update({'tx': tx})
         if self.debug:
-            print('client sending transaction ID', tx, '*dbug*')
+            log('client sending transaction ID', tx, '*dbug*')
         return self
 
     def recv_tx(self):
@@ -98,7 +102,7 @@ class Client:
         if 'tx' in self.response.keys():
             self.cache[self.key] = self.response['tx']
             if self.debug:
-                print('client: received transaction ID', self.response['tx'], '*dbug*')
+                log('client: received transaction ID', self.response['tx'], '*dbug*')
         return self
 
     def post(self, url_path: str, request: dict):
@@ -115,13 +119,13 @@ class Client:
             }
             client = ApiClient('https://127.0.0.1:5000/', 'myapikey')
             response = client.post('api01/y', req).response
-            print(response.json()
+            log(response.json()
         """
         self.request = request
         url = self.format_url(url_path)  # Build our request URL.
         self.send_tx()  # Send our transaction ID.
         if self.debug:
-            print('sending request:', self.request)
+            log('sending request:', self.request)
         try:
             self.response = requests.post(url, json=self.request, verify=self.verify)
         except (  # Retry failed connection every 5 seconds.
@@ -130,25 +134,25 @@ class Client:
                 requests.exceptions.InvalidURL,
                 AttributeError,
         ) as err:
-            print('unable to connect to server', url, '*err*')
-            print(err, '*dbug*')
+            log('unable to connect to server', url, '*err*')
+            log(err, '*dbug*')
             time.sleep(5)  # Prevent hammer retries.
-            print('retrying connection', '*info*')
+            log('retrying connection', '*info*')
             self.post(url_path, request)
         try:  # Handle connection problems (no connection).
             try:  # Handle problematic response contents.
                 self.response = self.response.json()  # Get response from api.
             except json.decoder.JSONDecodeError:
                 if not self.response.text:
-                    print('connection failure, invalid API key')
+                    log('connection failure, invalid API key')
                     raise ConnectionError
-                print('unable to process json response', '*err*')
+                log('unable to process json response', '*err*')
                 raise AttributeError
             self.recv_tx()  # Update transaction ID.
         except AttributeError:
-            print('connection error')
+            log('connection error')
             if isinstance(self.response, dict):
-                print(self.response)
+                log(self.response)
             time.sleep(5)
             self.post(url_path, request)
         return self
@@ -166,22 +170,22 @@ class Client:
         try:  # Same difference if the key isn't in the cache.
             request = {'status_type': self.request_types[req_ty]}
             if self.debug:
-                print('checking key', cache_key)
-                print('status request', request)
+                log('checking key', cache_key)
+                log('status request', request)
             self.post(self.urls['status'], request)
             stamp = self.response['stamp']
             if stamp != self.local_stamp or cache_key not in self.cache.keys():
                 self.local_stamp = stamp  # Update local timestamp.
                 result = True
             if self.debug:
-                print('cache:', self.local_stamp, 'returned', stamp, 'result:', result)
-                print('keys:', self.cache.keys())
+                log('cache:', self.local_stamp, 'returned', stamp, 'result:', result)
+                log('keys:', self.cache.keys())
         except KeyError:
             result = True
         if self.debug:
-            print('local', self.local_stamp)
-            print('remote', stamp)
-            print('status result', result)
+            log('local', self.local_stamp)
+            log('remote', stamp)
+            log('status result', result)
         return result
 
     def get_alerts(self, req_ty: str = 'aaa') -> dict:
