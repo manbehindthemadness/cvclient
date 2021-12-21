@@ -231,10 +231,14 @@ class Client:
             chart_focus: str = str(),
             chart_pair: str = str(),
             include_alerts: str = 'false',
+            include_variety: str = 'false',
             multiplier: int = 1
     ) -> dict:
         """
         This will get us some tastey chart data.
+
+        from cvc import Client; c = Client('767246ba-7f6f-4d1e-8d36-1b2c71bb11fb', 'https://10.4.222.42:5000', debug=True)
+        c.get_chart(chart_type='aaa', chart_length=20, chart_time='1hour', chart_pair='usdt', include_alerts='true', include_variety='true')
 
         Example response:
             {
@@ -268,6 +272,7 @@ class Client:
         :param chart_focus: The target currency to sample.
         :param chart_pair: This is an optional pairing that only used if you want binance price data returned.
         :param include_alerts: This will include the latest alert values for this timesample.
+        :param include_variety: This will include the alert "variety" chart feed.
         :param multiplier: This will scale the affect the target currency has on the chart formation.
         :return: Response from server (Or cached request values if no new data is available.
         """
@@ -278,6 +283,7 @@ class Client:
             'chart_focus': chart_focus,
             'chart_pair': chart_pair,
             'include_alerts': include_alerts,
+            'include_variety': include_variety,
             'multiplier': multiplier
         }
         specific = str()
