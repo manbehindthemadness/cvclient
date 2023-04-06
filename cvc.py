@@ -14,6 +14,7 @@ import json
 import time
 import requests
 import urllib3
+
 try:
     from utils import log
 except ImportError:
@@ -33,7 +34,8 @@ class Client:
         self.verify = verify
         if not self.verify:
             urllib3.disable_warnings(
-                urllib3.exceptions.InsecureRequestWarning)  # Temporary until we stop using self signed certs.
+                urllib3.exceptions.InsecureRequestWarning
+                )  # Temporary until we stop using self signed certs.
         self.debug = debug
         self.cache = TRANSACTION_CACHE
         self.local_stamp = None
@@ -47,17 +49,17 @@ class Client:
             'status': '/client/status',
             'alerts': '/client/alerts',
             'charts': '/client/charts'
-        }
+            }
         self.allowed_times = [
             '15MINUTE',
             '30MINUTE',
             '1HOUR',
             '4HOUR',
             '1DAY'
-        ]
+            ]
         self.request_types = {
             'aaa': 'aaa_floating'
-        }
+            }
         for req in self.request_types:
             self.cache[req] = dict()
             self.cache[req]['stamp'] = str()
@@ -130,7 +132,7 @@ class Client:
                 requests.exceptions.ConnectionError,
                 requests.exceptions.InvalidURL,
                 AttributeError,
-        ) as err:
+                ) as err:
             log('unable to connect to server', url, '*err*')
             log(err, '*dbug*')
             time.sleep(5)  # Prevent hammer retries.
@@ -213,9 +215,13 @@ class Client:
         """
         cache_kay = req_ty + 'alerts'
         if self.check_status(req_ty, cache_kay):
-            request = {'alert_type': self.request_types[req_ty]}
-            response = self.post(self.urls['alerts'], request).response
-            self.cache[cache_kay] = response
+            try:
+                request = {'alert_type': self.request_types[req_ty]}
+                response = self.post(self.urls['alerts'], request).response
+                self.cache[cache_kay] = response
+            except Exception as err:  # noqa
+                log('failed to acquire alert data')
+                log(err)
         else:
             response = self.cache[cache_kay]
         return response
@@ -230,7 +236,7 @@ class Client:
             include_alerts: str = 'false',
             include_variety: str = 'false',
             multiplier: int = 1
-    ) -> dict:
+            ) -> dict:
         """
         This will get us some tastey chart data.
 
@@ -282,7 +288,7 @@ class Client:
             'include_alerts': include_alerts,
             'include_variety': include_variety,
             'multiplier': multiplier
-        }
+            }
         specific = str()
         for key in request:
             specific += str(request[key])
